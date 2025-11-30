@@ -83,7 +83,7 @@ function FryzerUI:CreateWindow(config)
     config = config or {}
     config.Title = config.Title or "Fryzer Hub"
     config.Version = config.Version or "v1.0"
-    config.Size = config.Size or UDim2.new(0, 806, 0, 448)
+    config.Size = config.Size or UDim2.new(0, 500, 0, 350) -- Smaller default size
     
     print("⚙️ Config:", config.Title, config.Version)
     
@@ -244,19 +244,33 @@ function FryzerUI:CreateWindow(config)
     TopDivider.BorderSizePixel = 0
     TopDivider.Parent = MainBg
     
-    -- Tab Section Background
-    local TabSection = Instance.new("Frame")
+    -- Tab Section Background (Scrollable)
+    local TabSection = Instance.new("ScrollingFrame")
     TabSection.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
     TabSection.Position = UDim2.new(0, 0, 0.142, 0)
-    TabSection.Size = UDim2.new(0, 144, 0, 325)
+    TabSection.Size = UDim2.new(0, 120, 0, 325) -- Made smaller
     TabSection.BorderSizePixel = 0
+    TabSection.ScrollBarThickness = 3
+    TabSection.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
+    TabSection.CanvasSize = UDim2.new(0, 0, 0, 0)
     TabSection.Parent = MainBg
+    
+    -- Add UIListLayout for tabs
+    local TabListLayout = Instance.new("UIListLayout")
+    TabListLayout.Padding = UDim.new(0, 4)
+    TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    TabListLayout.Parent = TabSection
+    
+    -- Update canvas size when tabs are added
+    TabListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        TabSection.CanvasSize = UDim2.new(0, 0, 0, TabListLayout.AbsoluteContentSize.Y + 10)
+    end)
     
     -- Tab Divider
     local TabDivider = Instance.new("Frame")
     TabDivider.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    TabDivider.Position = UDim2.new(0.179, 0, 0.142, 0)
-    TabDivider.Size = UDim2.new(0, 3, 0, 326)
+    TabDivider.Position = UDim2.new(0.24, 0, 0.142, 0) -- Adjusted for smaller tab section
+    TabDivider.Size = UDim2.new(0, 2, 0, 326)
     TabDivider.BorderSizePixel = 0
     TabDivider.Parent = MainBg
     
@@ -264,8 +278,8 @@ function FryzerUI:CreateWindow(config)
     local ContentArea = Instance.new("Frame")
     ContentArea.Name = "ContentArea"
     ContentArea.BackgroundColor3 = Color3.fromRGB(39, 39, 39)
-    ContentArea.Position = UDim2.new(0.197, 0, 0.156, 0)
-    ContentArea.Size = UDim2.new(0, 631, 0, 311)
+    ContentArea.Position = UDim2.new(0.27, 0, 0.156, 0) -- Adjusted position
+    ContentArea.Size = UDim2.new(0.71, 0, 0, 311) -- Adjusted size
     ContentArea.ClipsDescendants = true
     ContentArea.BorderSizePixel = 0
     ContentArea.Parent = MainBg
@@ -375,12 +389,11 @@ function FryzerUI:CreateWindow(config)
         -- Create Tab Button
         local TabButton = Instance.new("TextButton")
         TabButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-        TabButton.Position = UDim2.new(0, 0, 0, #Window.Tabs * 40)
-        TabButton.Size = UDim2.new(1, 0, 0, 36)
+        TabButton.Size = UDim2.new(1, -5, 0, 32) -- Smaller tab buttons
         TabButton.Font = Enum.Font.GothamBold
         TabButton.Text = name
         TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-        TabButton.TextSize = 14
+        TabButton.TextSize = 12 -- Smaller text
         TabButton.BorderSizePixel = 0
         TabButton.Parent = TabSection
         
@@ -551,6 +564,122 @@ function FryzerUI:CreateWindow(config)
             SectionName.Parent = Section
             
             return Section
+        end
+        
+        function Tab:AddSlider(config)
+            config = config or {}
+            config.Name = config.Name or "Slider"
+            config.Min = config.Min or 0
+            config.Max = config.Max or 100
+            config.Default = config.Default or 50
+            config.Callback = config.Callback or function() end
+            
+            print("🎚️ Adding slider:", config.Name)
+            
+            local SliderFrame = Instance.new("Frame")
+            SliderFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+            SliderFrame.Size = UDim2.new(1, -10, 0, 50)
+            SliderFrame.BorderSizePixel = 0
+            SliderFrame.Parent = TabContent
+            
+            local SliderName = Instance.new("TextLabel")
+            SliderName.BackgroundTransparency = 1
+            SliderName.Position = UDim2.new(0, 10, 0, 5)
+            SliderName.Size = UDim2.new(0, 154, 0, 20)
+            SliderName.Font = Enum.Font.GothamBold
+            SliderName.Text = config.Name
+            SliderName.TextColor3 = Color3.fromRGB(255, 255, 255)
+            SliderName.TextSize = 14
+            SliderName.TextXAlignment = Enum.TextXAlignment.Left
+            SliderName.Parent = SliderFrame
+            
+            local ValueLabel = Instance.new("TextLabel")
+            ValueLabel.BackgroundTransparency = 1
+            ValueLabel.Position = UDim2.new(0.7, 0, 0, 5)
+            ValueLabel.Size = UDim2.new(0.25, 0, 0, 20)
+            ValueLabel.Font = Enum.Font.GothamBold
+            ValueLabel.Text = tostring(config.Default)
+            ValueLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            ValueLabel.TextSize = 14
+            ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
+            ValueLabel.Parent = SliderFrame
+            
+            -- Slider Background
+            local SliderBg = Instance.new("Frame")
+            SliderBg.BackgroundColor3 = Color3.fromRGB(39, 39, 39)
+            SliderBg.Position = UDim2.new(0, 10, 0, 30)
+            SliderBg.Size = UDim2.new(1, -20, 0, 10)
+            SliderBg.BorderSizePixel = 0
+            SliderBg.Parent = SliderFrame
+            
+            local SliderBgCorner = Instance.new("UICorner")
+            SliderBgCorner.CornerRadius = UDim.new(1, 0)
+            SliderBgCorner.Parent = SliderBg
+            
+            -- Slider Fill
+            local SliderFill = Instance.new("Frame")
+            SliderFill.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+            SliderFill.Size = UDim2.new((config.Default - config.Min) / (config.Max - config.Min), 0, 1, 0)
+            SliderFill.BorderSizePixel = 0
+            SliderFill.Parent = SliderBg
+            
+            local SliderFillCorner = Instance.new("UICorner")
+            SliderFillCorner.CornerRadius = UDim.new(1, 0)
+            SliderFillCorner.Parent = SliderFill
+            
+            -- Slider Button (Draggable)
+            local SliderButton = Instance.new("TextButton")
+            SliderButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            SliderButton.Position = UDim2.new((config.Default - config.Min) / (config.Max - config.Min), -8, 0.5, -8)
+            SliderButton.Size = UDim2.new(0, 16, 0, 16)
+            SliderButton.Text = ""
+            SliderButton.BorderSizePixel = 0
+            SliderButton.ZIndex = 2
+            SliderButton.Parent = SliderBg
+            
+            local ButtonCorner = Instance.new("UICorner")
+            ButtonCorner.CornerRadius = UDim.new(1, 0)
+            ButtonCorner.Parent = SliderButton
+            
+            local currentValue = config.Default
+            local dragging = false
+            
+            local function updateSlider(input)
+                local pos = math.clamp((input.Position.X - SliderBg.AbsolutePosition.X) / SliderBg.AbsoluteSize.X, 0, 1)
+                currentValue = math.floor(config.Min + (config.Max - config.Min) * pos)
+                
+                ValueLabel.Text = tostring(currentValue)
+                Tween(SliderFill, {Size = UDim2.new(pos, 0, 1, 0)}, 0.1)
+                Tween(SliderButton, {Position = UDim2.new(pos, -8, 0.5, -8)}, 0.1)
+                
+                config.Callback(currentValue)
+            end
+            
+            -- Mouse/Touch support
+            SliderButton.MouseButton1Down:Connect(function()
+                dragging = true
+            end)
+            
+            SliderBg.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = true
+                    updateSlider(input)
+                end
+            end)
+            
+            UserInputService.InputChanged:Connect(function(input)
+                if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                    updateSlider(input)
+                end
+            end)
+            
+            UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = false
+                end
+            end)
+            
+            return SliderFrame
         end
         
         table.insert(Window.Tabs, Tab)
