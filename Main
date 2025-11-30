@@ -1,10 +1,8 @@
 --[[
-    Fryzer UI Library - DEBUG VERSION
-    A modern UI library for Roblox
+    Fryzer UI Library - Responsive & Compact Version
+    A modern UI library for Roblox that works on all devices
     Author: Fryzer
 ]]
-
-print("🚀 Fryzer UI Library Loading...")
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -12,10 +10,35 @@ local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
-print("✅ Services loaded successfully")
-
 local FryzerUI = {}
 FryzerUI.__index = FryzerUI
+
+-- Device Detection
+local function GetDeviceType()
+    if UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled then
+        return "Mobile"
+    elseif UserInputService.GamepadEnabled then
+        return "Console"
+    else
+        return "PC"
+    end
+end
+
+-- Responsive Sizing
+local function GetResponsiveSize()
+    local deviceType = GetDeviceType()
+    local viewportSize = workspace.CurrentCamera.ViewportSize
+    
+    if deviceType == "Mobile" then
+        -- Smaller for mobile devices
+        return UDim2.new(0, math.min(viewportSize.X * 0.9, 400), 0, math.min(viewportSize.Y * 0.7, 350))
+    elseif deviceType == "Console" then
+        return UDim2.new(0, 500, 0, 380)
+    else
+        -- PC - Compact but functional
+        return UDim2.new(0, 550, 0, 380)
+    end
+end
 
 -- Utility Functions
 local function Tween(instance, properties, duration, style, direction)
@@ -67,37 +90,19 @@ local function MakeDraggable(frame, dragFrame)
             update(input)
         end
     end)
-    
-    print("✅ Made draggable:", dragFrame.Name)
 end
 
 -- Main Library Function
 function FryzerUI:CreateWindow(config)
-    print("📦 Creating Window...")
-    
     local Window = {}
     Window.Tabs = {}
     Window.CurrentTab = nil
     
-    -- Validate config
     config = config or {}
     config.Title = config.Title or "Fryzer Hub"
     config.Version = config.Version or "v1.0"
-    config.Size = config.Size or UDim2.new(0, 500, 0, 350) -- Smaller default size
     
-    print("⚙️ Config:", config.Title, config.Version)
-    
-    -- Wait for PlayerGui
-    local success, playerGui = pcall(function()
-        return LocalPlayer:WaitForChild("PlayerGui", 10)
-    end)
-    
-    if not success or not playerGui then
-        warn("❌ Failed to get PlayerGui!")
-        return nil
-    end
-    
-    print("✅ PlayerGui found")
+    local playerGui = LocalPlayer:WaitForChild("PlayerGui")
     
     -- Create ScreenGui
     local ScreenGui = Instance.new("ScreenGui")
@@ -107,79 +112,76 @@ function FryzerUI:CreateWindow(config)
     ScreenGui.IgnoreGuiInset = true
     ScreenGui.DisplayOrder = 999
     
-    -- Try to parent to CoreGui first (for better compatibility)
-    local parentSuccess = pcall(function()
+    pcall(function()
         ScreenGui.Parent = game:GetService("CoreGui")
-        print("✅ Parented to CoreGui")
     end)
     
-    if not parentSuccess then
+    if not ScreenGui.Parent then
         ScreenGui.Parent = playerGui
-        print("✅ Parented to PlayerGui")
     end
+    
+    -- Get responsive size
+    local responsiveSize = GetResponsiveSize()
     
     -- Main Background
     local MainBg = Instance.new("Frame")
     MainBg.Name = "MainBg"
-    MainBg.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    MainBg.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
     MainBg.AnchorPoint = Vector2.new(0.5, 0.5)
     MainBg.Position = UDim2.new(0.5, 0, 0.5, 0)
-    MainBg.Size = config.Size
+    MainBg.Size = responsiveSize
     MainBg.ClipsDescendants = true
     MainBg.BorderSizePixel = 0
     MainBg.Active = true
     MainBg.Parent = ScreenGui
     
-    print("✅ Main background created")
-    
     local MainCorner = Instance.new("UICorner")
-    MainCorner.CornerRadius = UDim.new(0, 29)
+    MainCorner.CornerRadius = UDim.new(0, 12)
     MainCorner.Parent = MainBg
     
-    -- Top Bar
+    -- Top Bar (Compact)
     local TopBar = Instance.new("Frame")
     TopBar.Name = "TopBar"
     TopBar.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
-    TopBar.Size = UDim2.new(1, 0, 0, 62)
+    TopBar.Size = UDim2.new(1, 0, 0, 45)
     TopBar.BorderSizePixel = 0
     TopBar.Parent = MainBg
     
     local TopBarCorner = Instance.new("UICorner")
-    TopBarCorner.CornerRadius = UDim.new(0.2, 8)
+    TopBarCorner.CornerRadius = UDim.new(0, 12)
     TopBarCorner.Parent = TopBar
     
     local TopBarExtend = Instance.new("Frame")
     TopBarExtend.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
-    TopBarExtend.Position = UDim2.new(0, 0, 0.8, 0)
-    TopBarExtend.Size = UDim2.new(1, 0, 0, 11)
+    TopBarExtend.Position = UDim2.new(0, 0, 0.7, 0)
+    TopBarExtend.Size = UDim2.new(1, 0, 0.3, 0)
     TopBarExtend.BorderSizePixel = 0
     TopBarExtend.Parent = TopBar
     
-    print("✅ Top bar created")
-    
-    -- Title
+    -- Title (Compact)
     local Title = Instance.new("TextLabel")
     Title.Name = "Title"
     Title.BackgroundTransparency = 1
-    Title.Position = UDim2.new(0.01, 0, 0, 0)
-    Title.Size = UDim2.new(0, 200, 0, 62)
+    Title.Position = UDim2.new(0.02, 0, 0, 0)
+    Title.Size = UDim2.new(0.4, 0, 1, 0)
     Title.Font = Enum.Font.GothamBold
     Title.Text = config.Title
     Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Title.TextSize = 18
+    Title.TextSize = 14
+    Title.TextScaled = true
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.Parent = TopBar
     
-    -- Version Tag
+    -- Version Tag (Compact)
     local VersionTag = Instance.new("Frame")
     VersionTag.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-    VersionTag.Position = UDim2.new(0.695, 0, 0.13, 0)
-    VersionTag.Size = UDim2.new(0, 101, 0, 40)
+    VersionTag.Position = UDim2.new(0.45, 0, 0.2, 0)
+    VersionTag.Size = UDim2.new(0, 65, 0, 26)
     VersionTag.BorderSizePixel = 0
     VersionTag.Parent = TopBar
     
     local VersionCorner = Instance.new("UICorner")
-    VersionCorner.CornerRadius = UDim.new(0, 55)
+    VersionCorner.CornerRadius = UDim.new(0, 13)
     VersionCorner.Parent = VersionTag
     
     local VersionText = Instance.new("TextLabel")
@@ -188,134 +190,132 @@ function FryzerUI:CreateWindow(config)
     VersionText.Font = Enum.Font.GothamBold
     VersionText.Text = config.Version
     VersionText.TextColor3 = Color3.fromRGB(255, 255, 255)
-    VersionText.TextSize = 16
+    VersionText.TextSize = 12
     VersionText.Parent = VersionTag
     
     -- Close Button
     local CloseButton = Instance.new("TextButton")
     CloseButton.BackgroundTransparency = 1
-    CloseButton.Position = UDim2.new(0.918, 0, 0.117, 0)
-    CloseButton.Size = UDim2.new(0, 50, 0, 43)
+    CloseButton.Position = UDim2.new(0.92, 0, 0, 0)
+    CloseButton.Size = UDim2.new(0.08, 0, 1, 0)
     CloseButton.Font = Enum.Font.GothamBold
     CloseButton.Text = "X"
     CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    CloseButton.TextSize = 20
+    CloseButton.TextSize = 16
     CloseButton.BorderSizePixel = 0
     CloseButton.Parent = TopBar
     
     CloseButton.MouseButton1Click:Connect(function()
-        print("🔴 Close button clicked")
         Tween(MainBg, {Size = UDim2.new(0, 0, 0, 0)}, 0.3)
-        wait(0.3)
+        task.wait(0.3)
         ScreenGui:Destroy()
-        print("✅ GUI Destroyed")
     end)
     
     -- Minimize Button
     local MinimizeButton = Instance.new("TextButton")
     MinimizeButton.BackgroundTransparency = 1
-    MinimizeButton.Position = UDim2.new(0.849, 0, 0.117, 0)
-    MinimizeButton.Size = UDim2.new(0, 50, 0, 43)
+    MinimizeButton.Position = UDim2.new(0.84, 0, 0, 0)
+    MinimizeButton.Size = UDim2.new(0.08, 0, 1, 0)
     MinimizeButton.Font = Enum.Font.GothamBold
     MinimizeButton.Text = "-"
     MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    MinimizeButton.TextSize = 24
+    MinimizeButton.TextSize = 20
     MinimizeButton.BorderSizePixel = 0
     MinimizeButton.Parent = TopBar
     
     local isMinimized = false
     MinimizeButton.MouseButton1Click:Connect(function()
         isMinimized = not isMinimized
-        print("📦 Minimize toggled:", isMinimized)
         if isMinimized then
-            Tween(MainBg, {Size = UDim2.new(0, 806, 0, 62)}, 0.3)
+            Tween(MainBg, {Size = UDim2.new(responsiveSize.X.Scale, responsiveSize.X.Offset, 0, 45)}, 0.3)
             MinimizeButton.Text = "+"
         else
-            Tween(MainBg, {Size = config.Size}, 0.3)
+            Tween(MainBg, {Size = responsiveSize}, 0.3)
             MinimizeButton.Text = "-"
         end
     end)
     
-    -- Top Bar Divider
+    -- Top Divider
     local TopDivider = Instance.new("Frame")
-    TopDivider.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    TopDivider.Position = UDim2.new(0, 0, 0.14, 0)
+    TopDivider.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    TopDivider.Position = UDim2.new(0, 0, 0, 45)
     TopDivider.Size = UDim2.new(1, 0, 0, 1)
     TopDivider.BorderSizePixel = 0
     TopDivider.Parent = MainBg
     
-    -- Tab Section Background (Scrollable)
-    local TabSection = Instance.new("ScrollingFrame")
+    -- Tab Section (Compact)
+    local TabSection = Instance.new("Frame")
     TabSection.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
-    TabSection.Position = UDim2.new(0, 0, 0.142, 0)
-    TabSection.Size = UDim2.new(0, 120, 0, 325) -- Made smaller
+    TabSection.Position = UDim2.new(0, 0, 0, 46)
+    TabSection.Size = UDim2.new(0, 100, 1, -91)
     TabSection.BorderSizePixel = 0
-    TabSection.ScrollBarThickness = 3
-    TabSection.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
-    TabSection.CanvasSize = UDim2.new(0, 0, 0, 0)
     TabSection.Parent = MainBg
     
-    -- Add UIListLayout for tabs
-    local TabListLayout = Instance.new("UIListLayout")
-    TabListLayout.Padding = UDim.new(0, 4)
-    TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    TabListLayout.Parent = TabSection
+    local TabList = Instance.new("UIListLayout")
+    TabList.Padding = UDim.new(0, 3)
+    TabList.SortOrder = Enum.SortOrder.LayoutOrder
+    TabList.Parent = TabSection
     
-    -- Update canvas size when tabs are added
-    TabListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        TabSection.CanvasSize = UDim2.new(0, 0, 0, TabListLayout.AbsoluteContentSize.Y + 10)
-    end)
+    local TabPadding = Instance.new("UIPadding")
+    TabPadding.PaddingTop = UDim.new(0, 5)
+    TabPadding.PaddingLeft = UDim.new(0, 5)
+    TabPadding.PaddingRight = UDim.new(0, 5)
+    TabPadding.Parent = TabSection
     
     -- Tab Divider
     local TabDivider = Instance.new("Frame")
-    TabDivider.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    TabDivider.Position = UDim2.new(0.24, 0, 0.142, 0) -- Adjusted for smaller tab section
-    TabDivider.Size = UDim2.new(0, 2, 0, 326)
+    TabDivider.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    TabDivider.Position = UDim2.new(0, 100, 0, 46)
+    TabDivider.Size = UDim2.new(0, 1, 1, -91)
     TabDivider.BorderSizePixel = 0
     TabDivider.Parent = MainBg
     
     -- Main Content Area
     local ContentArea = Instance.new("Frame")
     ContentArea.Name = "ContentArea"
-    ContentArea.BackgroundColor3 = Color3.fromRGB(39, 39, 39)
-    ContentArea.Position = UDim2.new(0.27, 0, 0.156, 0) -- Adjusted position
-    ContentArea.Size = UDim2.new(0.71, 0, 0, 311) -- Adjusted size
+    ContentArea.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    ContentArea.Position = UDim2.new(0, 106, 0, 50)
+    ContentArea.Size = UDim2.new(1, -112, 1, -95)
     ContentArea.ClipsDescendants = true
     ContentArea.BorderSizePixel = 0
     ContentArea.Parent = MainBg
     
     local ContentCorner = Instance.new("UICorner")
-    ContentCorner.CornerRadius = UDim.new(0, 24)
+    ContentCorner.CornerRadius = UDim.new(0, 8)
     ContentCorner.Parent = ContentArea
     
-    print("✅ Content area created")
-    
-    -- Bottom Bar
+    -- Bottom Bar (Compact)
     local BottomBar = Instance.new("Frame")
-    BottomBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    BottomBar.Position = UDim2.new(0, 0, 0.87, 0)
-    BottomBar.Size = UDim2.new(1, 0, 0, 58)
+    BottomBar.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+    BottomBar.Position = UDim2.new(0, 0, 1, -40)
+    BottomBar.Size = UDim2.new(1, 0, 0, 40)
     BottomBar.BorderSizePixel = 0
     BottomBar.Parent = MainBg
     
     local BottomCorner = Instance.new("UICorner")
-    BottomCorner.CornerRadius = UDim.new(0, 22)
+    BottomCorner.CornerRadius = UDim.new(0, 12)
     BottomCorner.Parent = BottomBar
+    
+    local BottomExtend = Instance.new("Frame")
+    BottomExtend.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+    BottomExtend.Position = UDim2.new(0, 0, 0, 0)
+    BottomExtend.Size = UDim2.new(1, 0, 0.3, 0)
+    BottomExtend.BorderSizePixel = 0
+    BottomExtend.Parent = BottomBar
     
     -- Bottom Divider
     local BottomDivider = Instance.new("Frame")
-    BottomDivider.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    BottomDivider.Position = UDim2.new(0, 0, 0.867, 0)
+    BottomDivider.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    BottomDivider.Position = UDim2.new(0, 0, 1, -41)
     BottomDivider.Size = UDim2.new(1, 0, 0, 1)
     BottomDivider.BorderSizePixel = 0
     BottomDivider.Parent = MainBg
     
-    -- User Profile Image
+    -- User Profile (Compact)
     local UserProfile = Instance.new("ImageLabel")
     UserProfile.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    UserProfile.BackgroundTransparency = 0
-    UserProfile.Position = UDim2.new(0.031, 0, 0.12, 0)
-    UserProfile.Size = UDim2.new(0, 69, 0, 44)
+    UserProfile.Position = UDim2.new(0.02, 0, 0.15, 0)
+    UserProfile.Size = UDim2.new(0, 28, 0, 28)
     UserProfile.BorderSizePixel = 0
     UserProfile.Image = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. LocalPlayer.UserId .. "&width=150&height=150&format=png"
     UserProfile.Parent = BottomBar
@@ -324,41 +324,42 @@ function FryzerUI:CreateWindow(config)
     ProfileCorner.CornerRadius = UDim.new(1, 0)
     ProfileCorner.Parent = UserProfile
     
-    -- Username
+    -- Username (Compact)
     local Username = Instance.new("TextLabel")
     Username.BackgroundTransparency = 1
-    Username.Position = UDim2.new(0.134, 0, 0.12, 0)
-    Username.Size = UDim2.new(0, 115, 0, 37)
+    Username.Position = UDim2.new(0, 38, 0, 0)
+    Username.Size = UDim2.new(0, 100, 1, 0)
     Username.Font = Enum.Font.GothamBold
     Username.Text = "@" .. LocalPlayer.Name
     Username.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Username.TextSize = 14
+    Username.TextSize = 10
     Username.TextScaled = true
+    Username.TextXAlignment = Enum.TextXAlignment.Left
     Username.Parent = BottomBar
     
-    -- FPS Counter
+    -- FPS Counter (Compact)
     local FpsLabel = Instance.new("TextLabel")
     FpsLabel.BackgroundTransparency = 1
-    FpsLabel.Position = UDim2.new(0.542, 0, 0.07, 0)
-    FpsLabel.Size = UDim2.new(0, 200, 0, 50)
+    FpsLabel.Position = UDim2.new(0.65, 0, 0, 0)
+    FpsLabel.Size = UDim2.new(0.15, 0, 1, 0)
     FpsLabel.Font = Enum.Font.GothamBold
     FpsLabel.Text = "FPS: 60"
     FpsLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    FpsLabel.TextSize = 16
+    FpsLabel.TextSize = 11
+    FpsLabel.TextScaled = true
     FpsLabel.Parent = BottomBar
     
-    -- Time Label
+    -- Time Label (Compact)
     local TimeLabel = Instance.new("TextLabel")
     TimeLabel.BackgroundTransparency = 1
-    TimeLabel.Position = UDim2.new(0.284, 0, 0.07, 0)
-    TimeLabel.Size = UDim2.new(0, 200, 0, 50)
+    TimeLabel.Position = UDim2.new(0.82, 0, 0, 0)
+    TimeLabel.Size = UDim2.new(0.16, 0, 1, 0)
     TimeLabel.Font = Enum.Font.GothamBold
-    TimeLabel.Text = "Time: 00:00"
+    TimeLabel.Text = "00:00"
     TimeLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TimeLabel.TextSize = 16
+    TimeLabel.TextSize = 11
+    TimeLabel.TextScaled = true
     TimeLabel.Parent = BottomBar
-    
-    print("✅ Bottom bar created")
     
     -- Update FPS and Time
     local lastUpdate = tick()
@@ -370,7 +371,7 @@ function FryzerUI:CreateWindow(config)
         lastUpdate = now
         
         FpsLabel.Text = "FPS: " .. fps
-        TimeLabel.Text = "Time: " .. os.date("%H:%M:%S")
+        TimeLabel.Text = os.date("%H:%M")
     end)
     
     -- Make Draggable
@@ -378,35 +379,31 @@ function FryzerUI:CreateWindow(config)
     
     -- Window Functions
     function Window:AddTab(name)
-        print("📑 Adding tab:", name)
-        
         local Tab = {}
         Tab.Name = name
         Tab.Elements = {}
-        Tab.Button = nil
-        Tab.Content = nil
         
-        -- Create Tab Button
+        -- Tab Button (Compact)
         local TabButton = Instance.new("TextButton")
-        TabButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-        TabButton.Size = UDim2.new(1, -5, 0, 32) -- Smaller tab buttons
+        TabButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+        TabButton.Size = UDim2.new(1, -10, 0, 32)
         TabButton.Font = Enum.Font.GothamBold
         TabButton.Text = name
         TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-        TabButton.TextSize = 12 -- Smaller text
+        TabButton.TextSize = 12
         TabButton.BorderSizePixel = 0
         TabButton.Parent = TabSection
         
         local TabCorner = Instance.new("UICorner")
-        TabCorner.CornerRadius = UDim.new(0, 88)
+        TabCorner.CornerRadius = UDim.new(0, 6)
         TabCorner.Parent = TabButton
         
-        -- Create Tab Content
+        -- Tab Content
         local TabContent = Instance.new("ScrollingFrame")
         TabContent.Name = name .. "Content"
         TabContent.BackgroundTransparency = 1
         TabContent.Size = UDim2.new(1, 0, 1, 0)
-        TabContent.ScrollBarThickness = 4
+        TabContent.ScrollBarThickness = 3
         TabContent.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
         TabContent.CanvasSize = UDim2.new(0, 0, 0, 0)
         TabContent.Visible = false
@@ -414,26 +411,24 @@ function FryzerUI:CreateWindow(config)
         TabContent.Parent = ContentArea
         
         local ListLayout = Instance.new("UIListLayout")
-        ListLayout.Padding = UDim.new(0, 5)
+        ListLayout.Padding = UDim.new(0, 4)
         ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
         ListLayout.Parent = TabContent
         
         local Padding = Instance.new("UIPadding")
-        Padding.PaddingLeft = UDim.new(0, 5)
-        Padding.PaddingRight = UDim.new(0, 5)
-        Padding.PaddingTop = UDim.new(0, 5)
+        Padding.PaddingLeft = UDim.new(0, 4)
+        Padding.PaddingRight = UDim.new(0, 4)
+        Padding.PaddingTop = UDim.new(0, 4)
         Padding.Parent = TabContent
         
         ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            TabContent.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 10)
+            TabContent.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 8)
         end)
         
         Tab.Button = TabButton
         Tab.Content = TabContent
         
-        -- Tab Click
         TabButton.MouseButton1Click:Connect(function()
-            print("🖱️ Tab clicked:", name)
             Window:SelectTab(Tab)
         end)
         
@@ -443,38 +438,38 @@ function FryzerUI:CreateWindow(config)
             config.Name = config.Name or "Button"
             config.Callback = config.Callback or function() end
             
-            print("🔘 Adding button:", config.Name)
-            
             local ButtonFrame = Instance.new("Frame")
-            ButtonFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
-            ButtonFrame.Size = UDim2.new(1, -10, 0, 33)
+            ButtonFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+            ButtonFrame.Size = UDim2.new(1, -8, 0, 28)
             ButtonFrame.BorderSizePixel = 0
             ButtonFrame.Parent = TabContent
             
+            local ButtonCorner = Instance.new("UICorner")
+            ButtonCorner.CornerRadius = UDim.new(0, 5)
+            ButtonCorner.Parent = ButtonFrame
+            
             local ButtonName = Instance.new("TextLabel")
             ButtonName.BackgroundTransparency = 1
-            ButtonName.Position = UDim2.new(0, 10, 0, 0)
-            ButtonName.Size = UDim2.new(0, 154, 1, 0)
+            ButtonName.Position = UDim2.new(0, 8, 0, 0)
+            ButtonName.Size = UDim2.new(0.6, 0, 1, 0)
             ButtonName.Font = Enum.Font.GothamBold
             ButtonName.Text = config.Name
             ButtonName.TextColor3 = Color3.fromRGB(255, 255, 255)
-            ButtonName.TextSize = 14
+            ButtonName.TextSize = 12
             ButtonName.TextXAlignment = Enum.TextXAlignment.Left
             ButtonName.Parent = ButtonFrame
             
             local ClickArea = Instance.new("TextButton")
             ClickArea.BackgroundTransparency = 1
-            ClickArea.Position = UDim2.new(0.254, 0, 0, 0)
-            ClickArea.Size = UDim2.new(0.746, 0, 1, 0)
+            ClickArea.Size = UDim2.new(1, 0, 1, 0)
             ClickArea.Text = ""
             ClickArea.BorderSizePixel = 0
             ClickArea.Parent = ButtonFrame
             
             ClickArea.MouseButton1Click:Connect(function()
-                print("✅ Button clicked:", config.Name)
-                Tween(ButtonFrame, {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}, 0.1)
-                wait(0.1)
-                Tween(ButtonFrame, {BackgroundColor3 = Color3.fromRGB(18, 18, 18)}, 0.1)
+                Tween(ButtonFrame, {BackgroundColor3 = Color3.fromRGB(40, 40, 40)}, 0.1)
+                task.wait(0.1)
+                Tween(ButtonFrame, {BackgroundColor3 = Color3.fromRGB(20, 20, 20)}, 0.1)
                 config.Callback()
             end)
             
@@ -487,83 +482,50 @@ function FryzerUI:CreateWindow(config)
             config.Default = config.Default or false
             config.Callback = config.Callback or function() end
             
-            print("🔄 Adding toggle:", config.Name)
-            
             local ToggleFrame = Instance.new("Frame")
-            ToggleFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
-            ToggleFrame.Size = UDim2.new(1, -10, 0, 33)
+            ToggleFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+            ToggleFrame.Size = UDim2.new(1, -8, 0, 28)
             ToggleFrame.BorderSizePixel = 0
             ToggleFrame.Parent = TabContent
             
+            local ToggleCorner = Instance.new("UICorner")
+            ToggleCorner.CornerRadius = UDim.new(0, 5)
+            ToggleCorner.Parent = ToggleFrame
+            
             local ToggleName = Instance.new("TextLabel")
             ToggleName.BackgroundTransparency = 1
-            ToggleName.Position = UDim2.new(0, 10, 0, 0)
-            ToggleName.Size = UDim2.new(0, 154, 1, 0)
+            ToggleName.Position = UDim2.new(0, 8, 0, 0)
+            ToggleName.Size = UDim2.new(0.7, 0, 1, 0)
             ToggleName.Font = Enum.Font.GothamBold
             ToggleName.Text = config.Name
             ToggleName.TextColor3 = Color3.fromRGB(255, 255, 255)
-            ToggleName.TextSize = 14
+            ToggleName.TextSize = 12
             ToggleName.TextXAlignment = Enum.TextXAlignment.Left
             ToggleName.Parent = ToggleFrame
             
             local ToggleButton = Instance.new("TextButton")
-            ToggleButton.BackgroundColor3 = config.Default and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(39, 39, 39)
-            ToggleButton.Position = UDim2.new(0.94, 0, 0.15, 0)
-            ToggleButton.Size = UDim2.new(0, 25, 0, 22)
+            ToggleButton.BackgroundColor3 = config.Default and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(40, 40, 40)
+            ToggleButton.Position = UDim2.new(0.88, 0, 0.2, 0)
+            ToggleButton.Size = UDim2.new(0, 20, 0, 18)
             ToggleButton.Text = ""
             ToggleButton.BorderSizePixel = 0
             ToggleButton.Parent = ToggleFrame
             
-            local ToggleCorner = Instance.new("UICorner")
-            ToggleCorner.CornerRadius = UDim.new(0, 5)
-            ToggleCorner.Parent = ToggleButton
+            local ToggleCorner2 = Instance.new("UICorner")
+            ToggleCorner2.CornerRadius = UDim.new(0, 4)
+            ToggleCorner2.Parent = ToggleButton
             
             local toggled = config.Default
             
             ToggleButton.MouseButton1Click:Connect(function()
                 toggled = not toggled
-                print("🔄 Toggle:", config.Name, "=", toggled)
                 Tween(ToggleButton, {
-                    BackgroundColor3 = toggled and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(39, 39, 39)
+                    BackgroundColor3 = toggled and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(40, 40, 40)
                 }, 0.2)
                 config.Callback(toggled)
             end)
             
             return ToggleFrame
-        end
-        
-        function Tab:AddDivider()
-            print("➖ Adding divider")
-            
-            local Divider = Instance.new("Frame")
-            Divider.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            Divider.Size = UDim2.new(1, -10, 0, 2)
-            Divider.BorderSizePixel = 0
-            Divider.Parent = TabContent
-            
-            return Divider
-        end
-        
-        function Tab:AddSection(name)
-            print("📋 Adding section:", name)
-            
-            local Section = Instance.new("Frame")
-            Section.BackgroundTransparency = 1
-            Section.Size = UDim2.new(1, -10, 0, 33)
-            Section.Parent = TabContent
-            
-            local SectionName = Instance.new("TextLabel")
-            SectionName.BackgroundTransparency = 1
-            SectionName.Position = UDim2.new(0, 10, 0, 0)
-            SectionName.Size = UDim2.new(0, 270, 1, 0)
-            SectionName.Font = Enum.Font.GothamBold
-            SectionName.Text = name or "Section"
-            SectionName.TextColor3 = Color3.fromRGB(255, 255, 255)
-            SectionName.TextSize = 16
-            SectionName.TextXAlignment = Enum.TextXAlignment.Left
-            SectionName.Parent = Section
-            
-            return Section
         end
         
         function Tab:AddSlider(config)
@@ -574,102 +536,101 @@ function FryzerUI:CreateWindow(config)
             config.Default = config.Default or 50
             config.Callback = config.Callback or function() end
             
-            print("🎚️ Adding slider:", config.Name)
-            
             local SliderFrame = Instance.new("Frame")
-            SliderFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
-            SliderFrame.Size = UDim2.new(1, -10, 0, 50)
+            SliderFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+            SliderFrame.Size = UDim2.new(1, -8, 0, 40)
             SliderFrame.BorderSizePixel = 0
             SliderFrame.Parent = TabContent
             
+            local SliderFrameCorner = Instance.new("UICorner")
+            SliderFrameCorner.CornerRadius = UDim.new(0, 5)
+            SliderFrameCorner.Parent = SliderFrame
+            
             local SliderName = Instance.new("TextLabel")
             SliderName.BackgroundTransparency = 1
-            SliderName.Position = UDim2.new(0, 10, 0, 5)
-            SliderName.Size = UDim2.new(0, 154, 0, 20)
+            SliderName.Position = UDim2.new(0, 8, 0, 2)
+            SliderName.Size = UDim2.new(0.6, 0, 0, 15)
             SliderName.Font = Enum.Font.GothamBold
             SliderName.Text = config.Name
             SliderName.TextColor3 = Color3.fromRGB(255, 255, 255)
-            SliderName.TextSize = 14
+            SliderName.TextSize = 12
             SliderName.TextXAlignment = Enum.TextXAlignment.Left
             SliderName.Parent = SliderFrame
             
-            local ValueLabel = Instance.new("TextLabel")
-            ValueLabel.BackgroundTransparency = 1
-            ValueLabel.Position = UDim2.new(0.7, 0, 0, 5)
-            ValueLabel.Size = UDim2.new(0.25, 0, 0, 20)
-            ValueLabel.Font = Enum.Font.GothamBold
-            ValueLabel.Text = tostring(config.Default)
-            ValueLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-            ValueLabel.TextSize = 14
-            ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
-            ValueLabel.Parent = SliderFrame
+            local SliderValue = Instance.new("TextLabel")
+            SliderValue.BackgroundTransparency = 1
+            SliderValue.Position = UDim2.new(0.6, 0, 0, 2)
+            SliderValue.Size = UDim2.new(0.35, 0, 0, 15)
+            SliderValue.Font = Enum.Font.GothamBold
+            SliderValue.Text = tostring(config.Default)
+            SliderValue.TextColor3 = Color3.fromRGB(0, 200, 255)
+            SliderValue.TextSize = 11
+            SliderValue.TextXAlignment = Enum.TextXAlignment.Right
+            SliderValue.Parent = SliderFrame
             
-            -- Slider Background
-            local SliderBg = Instance.new("Frame")
-            SliderBg.BackgroundColor3 = Color3.fromRGB(39, 39, 39)
-            SliderBg.Position = UDim2.new(0, 10, 0, 30)
-            SliderBg.Size = UDim2.new(1, -20, 0, 10)
-            SliderBg.BorderSizePixel = 0
-            SliderBg.Parent = SliderFrame
+            local SliderTrack = Instance.new("Frame")
+            SliderTrack.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            SliderTrack.Position = UDim2.new(0, 8, 0, 22)
+            SliderTrack.Size = UDim2.new(1, -16, 0, 6)
+            SliderTrack.BorderSizePixel = 0
+            SliderTrack.Parent = SliderFrame
             
-            local SliderBgCorner = Instance.new("UICorner")
-            SliderBgCorner.CornerRadius = UDim.new(1, 0)
-            SliderBgCorner.Parent = SliderBg
+            local SliderTrackCorner = Instance.new("UICorner")
+            SliderTrackCorner.CornerRadius = UDim.new(1, 0)
+            SliderTrackCorner.Parent = SliderTrack
             
-            -- Slider Fill
-            local SliderFill = Instance.new("Frame")
-            SliderFill.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-            SliderFill.Size = UDim2.new((config.Default - config.Min) / (config.Max - config.Min), 0, 1, 0)
-            SliderFill.BorderSizePixel = 0
-            SliderFill.Parent = SliderBg
+            local SliderFill2 = Instance.new("Frame")
+            SliderFill2.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
+            local percent = (config.Default - config.Min) / (config.Max - config.Min)
+            SliderFill2.Size = UDim2.new(percent, 0, 1, 0)
+            SliderFill2.BorderSizePixel = 0
+            SliderFill2.Parent = SliderTrack
             
-            local SliderFillCorner = Instance.new("UICorner")
-            SliderFillCorner.CornerRadius = UDim.new(1, 0)
-            SliderFillCorner.Parent = SliderFill
+            local SliderFill2Corner = Instance.new("UICorner")
+            SliderFill2Corner.CornerRadius = UDim.new(1, 0)
+            SliderFill2Corner.Parent = SliderFill2
             
-            -- Slider Button (Draggable)
-            local SliderButton = Instance.new("TextButton")
-            SliderButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            SliderButton.Position = UDim2.new((config.Default - config.Min) / (config.Max - config.Min), -8, 0.5, -8)
-            SliderButton.Size = UDim2.new(0, 16, 0, 16)
-            SliderButton.Text = ""
-            SliderButton.BorderSizePixel = 0
-            SliderButton.ZIndex = 2
-            SliderButton.Parent = SliderBg
+            local SliderDragger = Instance.new("TextButton")
+            SliderDragger.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            SliderDragger.Position = UDim2.new(percent, -6, 0.5, -6)
+            SliderDragger.Size = UDim2.new(0, 12, 0, 12)
+            SliderDragger.Text = ""
+            SliderDragger.BorderSizePixel = 0
+            SliderDragger.Parent = SliderTrack
             
-            local ButtonCorner = Instance.new("UICorner")
-            ButtonCorner.CornerRadius = UDim.new(1, 0)
-            ButtonCorner.Parent = SliderButton
+            local SliderDraggerCorner = Instance.new("UICorner")
+            SliderDraggerCorner.CornerRadius = UDim.new(1, 0)
+            SliderDraggerCorner.Parent = SliderDragger
             
-            local currentValue = config.Default
             local dragging = false
             
-            local function updateSlider(input)
-                local pos = math.clamp((input.Position.X - SliderBg.AbsolutePosition.X) / SliderBg.AbsoluteSize.X, 0, 1)
-                currentValue = math.floor(config.Min + (config.Max - config.Min) * pos)
+            local function updateSliderValue(pos)
+                local relativePos = math.clamp((pos.X - SliderTrack.AbsolutePosition.X) / SliderTrack.AbsoluteSize.X, 0, 1)
+                local value = math.floor(config.Min + (config.Max - config.Min) * relativePos)
                 
-                ValueLabel.Text = tostring(currentValue)
-                Tween(SliderFill, {Size = UDim2.new(pos, 0, 1, 0)}, 0.1)
-                Tween(SliderButton, {Position = UDim2.new(pos, -8, 0.5, -8)}, 0.1)
+                SliderValue.Text = tostring(value)
+                SliderFill2.Size = UDim2.new(relativePos, 0, 1, 0)
+                SliderDragger.Position = UDim2.new(relativePos, -6, 0.5, -6)
                 
-                config.Callback(currentValue)
+                config.Callback(value)
             end
             
-            -- Mouse/Touch support
-            SliderButton.MouseButton1Down:Connect(function()
-                dragging = true
-            end)
-            
-            SliderBg.InputBegan:Connect(function(input)
+            SliderDragger.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     dragging = true
-                    updateSlider(input)
+                end
+            end)
+            
+            SliderTrack.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = true
+                    updateSliderValue(input.Position)
                 end
             end)
             
             UserInputService.InputChanged:Connect(function(input)
                 if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                    updateSlider(input)
+                    updateSliderValue(input.Position)
                 end
             end)
             
@@ -682,36 +643,180 @@ function FryzerUI:CreateWindow(config)
             return SliderFrame
         end
         
+        function Tab:AddDivider()
+            local Divider = Instance.new("Frame")
+            Divider.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+            Divider.Size = UDim2.new(1, -8, 0, 1)
+            Divider.BorderSizePixel = 0
+            Divider.Parent = TabContent
+            
+            return Divider
+        end
+        
+        function Tab:AddSection(name)
+            local Section = Instance.new("Frame")
+            Section.BackgroundTransparency = 1
+            Section.Size = UDim2.new(1, -8, 0, 25)
+            Section.Parent = TabContent
+            
+            local SectionName = Instance.new("TextLabel")
+            SectionName.BackgroundTransparency = 1
+            SectionName.Position = UDim2.new(0, 8, 0, 0)
+            SectionName.Size = UDim2.new(1, -16, 1, 0)
+            SectionName.Font = Enum.Font.GothamBold
+            SectionName.Text = name or "Section"
+            SectionName.TextColor3 = Color3.fromRGB(255, 255, 255)
+            SectionName.TextSize = 13
+            SectionName.TextXAlignment = Enum.TextXAlignment.Left
+            SectionName.Parent = Section
+            
+            return Section
+        end
+        
         table.insert(Window.Tabs, Tab)
-        print("✅ Tab added successfully:", name)
         return Tab
     end
     
     function Window:SelectTab(tab)
-        print("🎯 Selecting tab:", tab.Name)
-        
         for _, t in pairs(Window.Tabs) do
             t.Content.Visible = false
-            Tween(t.Button, {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}, 0.2)
+            Tween(t.Button, {BackgroundColor3 = Color3.fromRGB(25, 25, 25)}, 0.2)
         end
         
         tab.Content.Visible = true
-        Tween(tab.Button, {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}, 0.2)
+        Tween(tab.Button, {BackgroundColor3 = Color3.fromRGB(45, 45, 45)}, 0.2)
         Window.CurrentTab = tab
-        
-        print("✅ Tab selected:", tab.Name)
     end
     
     -- Opening Animation
     MainBg.Size = UDim2.new(0, 0, 0, 0)
-    Tween(MainBg, {Size = config.Size}, 0.5, Enum.EasingStyle.Back)
-    
-    print("🎉 Window created successfully!")
-    print("==========================================")
+    Tween(MainBg, {Size = responsiveSize}, 0.5, Enum.EasingStyle.Back)
     
     return Window
 end
 
-print("✅ Fryzer UI Library loaded successfully!")
+return FryzerUIAlignment = Enum.TextXAlignment.Left
+            ButtonName.Parent = ButtonFrame
+            
+            local ClickArea = Instance.new("TextButton")
+            ClickArea.BackgroundTransparency = 1
+            ClickArea.Size = UDim2.new(1, 0, 1, 0)
+            ClickArea.Text = ""
+            ClickArea.BorderSizePixel = 0
+            ClickArea.Parent = ButtonFrame
+            
+            ClickArea.MouseButton1Click:Connect(function()
+                Tween(ButtonFrame, {BackgroundColor3 = Color3.fromRGB(40, 40, 40)}, 0.1)
+                task.wait(0.1)
+                Tween(ButtonFrame, {BackgroundColor3 = Color3.fromRGB(20, 20, 20)}, 0.1)
+                config.Callback()
+            end)
+            
+            return ButtonFrame
+        end
+        
+        function Tab:AddToggle(config)
+            config = config or {}
+            config.Name = config.Name or "Toggle"
+            config.Default = config.Default or false
+            config.Callback = config.Callback or function() end
+            
+            local ToggleFrame = Instance.new("Frame")
+            ToggleFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+            ToggleFrame.Size = UDim2.new(1, -8, 0, 28)
+            ToggleFrame.BorderSizePixel = 0
+            ToggleFrame.Parent = TabContent
+            
+            local ToggleCorner = Instance.new("UICorner")
+            ToggleCorner.CornerRadius = UDim.new(0, 5)
+            ToggleCorner.Parent = ToggleFrame
+            
+            local ToggleName = Instance.new("TextLabel")
+            ToggleName.BackgroundTransparency = 1
+            ToggleName.Position = UDim2.new(0, 8, 0, 0)
+            ToggleName.Size = UDim2.new(0.7, 0, 1, 0)
+            ToggleName.Font = Enum.Font.GothamBold
+            ToggleName.Text = config.Name
+            ToggleName.TextColor3 = Color3.fromRGB(255, 255, 255)
+            ToggleName.TextSize = 12
+            ToggleName.TextXAlignment = Enum.TextXAlignment.Left
+            ToggleName.Parent = ToggleFrame
+            
+            local ToggleButton = Instance.new("TextButton")
+            ToggleButton.BackgroundColor3 = config.Default and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(40, 40, 40)
+            ToggleButton.Position = UDim2.new(0.88, 0, 0.2, 0)
+            ToggleButton.Size = UDim2.new(0, 20, 0, 18)
+            ToggleButton.Text = ""
+            ToggleButton.BorderSizePixel = 0
+            ToggleButton.Parent = ToggleFrame
+            
+            local ToggleCorner2 = Instance.new("UICorner")
+            ToggleCorner2.CornerRadius = UDim.new(0, 4)
+            ToggleCorner2.Parent = ToggleButton
+            
+            local toggled = config.Default
+            
+            ToggleButton.MouseButton1Click:Connect(function()
+                toggled = not toggled
+                Tween(ToggleButton, {
+                    BackgroundColor3 = toggled and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(40, 40, 40)
+                }, 0.2)
+                config.Callback(toggled)
+            end)
+            
+            return ToggleFrame
+        end
+        
+        function Tab:AddDivider()
+            local Divider = Instance.new("Frame")
+            Divider.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+            Divider.Size = UDim2.new(1, -8, 0, 1)
+            Divider.BorderSizePixel = 0
+            Divider.Parent = TabContent
+            
+            return Divider
+        end
+        
+        function Tab:AddSection(name)
+            local Section = Instance.new("Frame")
+            Section.BackgroundTransparency = 1
+            Section.Size = UDim2.new(1, -8, 0, 25)
+            Section.Parent = TabContent
+            
+            local SectionName = Instance.new("TextLabel")
+            SectionName.BackgroundTransparency = 1
+            SectionName.Position = UDim2.new(0, 8, 0, 0)
+            SectionName.Size = UDim2.new(1, -16, 1, 0)
+            SectionName.Font = Enum.Font.GothamBold
+            SectionName.Text = name or "Section"
+            SectionName.TextColor3 = Color3.fromRGB(255, 255, 255)
+            SectionName.TextSize = 13
+            SectionName.TextXAlignment = Enum.TextXAlignment.Left
+            SectionName.Parent = Section
+            
+            return Section
+        end
+        
+        table.insert(Window.Tabs, Tab)
+        return Tab
+    end
+    
+    function Window:SelectTab(tab)
+        for _, t in pairs(Window.Tabs) do
+            t.Content.Visible = false
+            Tween(t.Button, {BackgroundColor3 = Color3.fromRGB(25, 25, 25)}, 0.2)
+        end
+        
+        tab.Content.Visible = true
+        Tween(tab.Button, {BackgroundColor3 = Color3.fromRGB(45, 45, 45)}, 0.2)
+        Window.CurrentTab = tab
+    end
+    
+    -- Opening Animation
+    MainBg.Size = UDim2.new(0, 0, 0, 0)
+    Tween(MainBg, {Size = responsiveSize}, 0.5, Enum.EasingStyle.Back)
+    
+    return Window
+end
 
 return FryzerUI
